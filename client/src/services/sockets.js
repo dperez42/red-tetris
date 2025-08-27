@@ -17,3 +17,11 @@ socket.on("disconnect", () => {
   if (import.meta.env.VITE_DEBUG==='true'){console.log("socket disconneted")}
   state.connected = false;
 });
+socket.on("connect", () => {
+  state.connected = true;
+  console.log("info: socket connected", socket.id);
+});
+socket.on("topic_name", (data) => {
+  if (import.meta.env.VITE_DEBUG==='true'){console.log("socket disconneted")}
+  state.connected = false;
+});

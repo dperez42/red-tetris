@@ -1,21 +1,23 @@
 class Games {
-    constructor() { 
+	constructor(name, player, intervalTime) { 
 		console.log("init class")
+		this.name = name
+		this.player = player
+		this.list_pieces = []
+		this.isStart = false
+		this.intervalId = null
+		this.intervalTime = intervalTime
 	}
-    /*
-	 ** Comment
-	 */
-	start = () => {
-		return new Promise((resolve, reject) => {
-			console.log("class tipo")
-		});
-	};
-	// create Room
-	create = (io, socket, data, players) => {
-		return new Promise((resolve, reject) => {
-			console.log("create rooms", data)
-		});
-	};
+	start(seed){
+		this.isStart = true
+	}
+	stop(){
+		this.isStart = false
+	}
+	info(){
+		console.log(this.name, this.player)
+		return
+	}
 }
 
 module.exports = Games;

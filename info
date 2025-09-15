@@ -1,4 +1,11 @@
+node 
+npm start
+
 vue
+
+npm run dev  
+npm run dev build
+
 https://github.com/Felicien410/red_tetris/tree/main/backend/src
 https://github.com/sawyerf/red-tetris/tree/main/front/src/components
 

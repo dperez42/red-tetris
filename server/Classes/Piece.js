@@ -9,6 +9,7 @@ class ClassTipo {
 		this.index_piece = 0
 		this.width = 0
 		this.height = 0
+		this.data = []
 	}
 
 	newPiece (){
@@ -18,6 +19,7 @@ class ClassTipo {
 		this.rotation = Math.floor(Math.random() * 3)
 		this.width =  tetriminios[this.index_piece].rotation[this.rotation][0].length
 		this.height = tetriminios[this.index_piece].rotation[this.rotation].length
+		this.data = tetriminios[this.index_piece].rotation[this.rotation]
 	}
 	
 	rotate(){

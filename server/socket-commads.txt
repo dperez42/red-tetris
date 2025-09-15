@@ -1,0 +1,7 @@
+
+command: 
+
+
+create/join 
+username 
+roomname

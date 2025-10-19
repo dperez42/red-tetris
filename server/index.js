@@ -13,8 +13,14 @@ const Game = require("./Classes/Game.js");
 const Piece = require("./Classes/Piece.js");
 const Player = require("./Classes/Player.js");
 const fs = require ('fs')
+const dotenv = require('dotenv');
 
-const PORT = process.env.PORT || 1337;
+// get config vars
+dotenv.config({path: __dirname + '/.env'})
+console.log(process.env)
+const PORT = process.env.SERVER_PORT || 1337;
+console.log(PORT)
+
 const app = express();
 const server = http.createServer(app);
 

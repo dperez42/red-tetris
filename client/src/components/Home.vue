@@ -1,8 +1,11 @@
 <template>
   <div v-if="this.game == null">No game</div>
   <div v-if="this.game != null">
-  <Game v-if="this.game != null" :room_name="this.game.name" :game="this.game.players[0]" />
-  Numero de player in {{ this.game.players.length }}
+  <div v-for="(game, index) in this.game.players"
+    :key="index">
+    <Game  :room_name="this.game.name" :game="this.game.players[index]" />
+    Numero de player in {{ this.game.players.length }}
+  </div>
   </div>
   <div v-if="this.game == null">
   <div class="card">

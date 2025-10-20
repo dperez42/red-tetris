@@ -1,11 +1,12 @@
 const Piece = require("./Piece.js");
 
 class ClassTipo {
-    constructor(sizeColumn, sizeRow, name) { 
+    constructor(sizeColumn, sizeRow, name, socket) { 
 		console.log("init class Player")
 		this.sizeColumn = sizeColumn
 		this.sizeRow = sizeRow
 		this.name = name
+		this.socket = socket
 		this.piece = new Piece
 		this.nb_piece = 0
 		this.field = Array.from({ length: sizeRow }, () => Array(sizeColumn).fill(0));

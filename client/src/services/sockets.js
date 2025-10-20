@@ -6,7 +6,7 @@ export const state = reactive({
   connected: false,
 });
 
-const serverURL = import.meta.env.VITE_APP_SERVER_API===undefined ? 'http://localhost:1337':import.meta.env.VITE_APP_SERVER_API;
+const serverURL = import.meta.env.VITE_SERVER_URL===undefined ? 'http://localhost:1337':import.meta.env.VITE_SERVER_URL;
 export const socket = io(serverURL,{extraHeaders: { }})
 
 socket.on("connect", () => {

@@ -15,6 +15,9 @@ const Player = require("./Classes/Player.js");
 const fs = require ('fs')
 const dotenv = require('dotenv');
 
+// INIT REDTETRIS
+let redtetris = new Redtetris()
+
 // get config vars
 dotenv.config({path: __dirname + '/.env'})
 console.log(process.env)
@@ -24,12 +27,7 @@ console.log(PORT)
 const app = express();
 const server = http.createServer(app);
 
-let redtetris = new Redtetris()
-let rooms = [];
-let players = [];
-let count = 0;
-let play = new Player(10,20, "daniel")
-play.addPiece()
+// Define CORS
 var corsOptions = {
   origin: "http://localhost:8080"
 };
@@ -40,6 +38,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 //app.use(express.static(__dirname + "/../client/dist/"));a
 app.use('/assets', express.static(path.join(__dirname + '/../public/assets')));
 app.disable('etag') //disable etag to avoid 304 during development
+
 // Socket configuration
 const io = socketio(server, {
   cors: {
@@ -61,8 +60,7 @@ io.on("connection", async (socket) => {
       console.log(e.message);
   }
   socket.on("red_tetris_server", async (data) => {
-    console.log("msg recieved in red-tetris server from ",socket.id,".",data)
-    
+    console.log("msg recieved in red-tetris server from ",socket.id,".",data)  
     if (data.command==='join'){
         //console.log("exist game?", data.roomName)
         const room_exists =  redtetris.checkGame(data.roomName)
@@ -72,8 +70,8 @@ io.on("connection", async (socket) => {
           console.log("creating game.", data.roomName)
           const game = new Game(data.roomName)
           console.log("Player:", data.playerName, " init Room:", data.roomName)
-          const player = new Player(10,20, data.playerName)
-          game.addPlayer(player, socket.id)
+          const player = new Player(10,20, data.playerName,socket.id)
+          game.addPlayer(player, socket.id) // quito este array socketid
           redtetris.addGame(game)
           // send back game
           const msg = {
@@ -94,10 +92,11 @@ io.on("connection", async (socket) => {
           const check_player = game.checkPlayer(data.playerName)
           if (!check_player) {
             console.log("Player:", data.playerName, " join to Room:", data.roomName)
-            const player = new Player(10,20, data.playerName)
+            const player = new Player(10,20, data.playerName,socket.id)
             game.addPlayer(player, socket.id)
             game.info()
-            // send back game
+
+            // send join msg to all player in the game
             const msg = {
               'command':'update',
               'data':game
@@ -135,17 +134,22 @@ io.on("connection", async (socket) => {
       play.print()
     }
     console.log("sendfin")
+    /*
     const item_game = {
       "username":data.key,
       "score":1,
       "board": play.getBoard()
     }
+    */
     //socket.emit("red_tetris_client",item_game)
   });
   socket.on("disconnect", () => {
-    console.log("socket disconnect")
+    console.log("socket disconnect",socket.id)
+    // delete player with socket look in all games 
+    // send update game to players
   });
 });
+
 
 // Sending app by index.html
 

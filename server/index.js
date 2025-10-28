@@ -50,17 +50,19 @@ const io = socketio(server, {
 });
 io.on("connection", async (socket) => {
   const data = {
-    "MSG" : "CONNECTED TO SERVER"
+      'command':'info',
+      'data': "CONNECTED TO SERVER"
   }
   socket.emit('red_tetris_client',data)
   try {
       socket.sendBuffer = [];
       console.log("Client Connected From", socket.handshake.headers.referer, socket.id);
+      //console.log("Client Connected From", socket, socket.id);
   } catch (e) {
       console.log(e.message);
   }
   socket.on("red_tetris_server", async (data) => {
-    console.log("msg recieved in red-tetris server from ",socket.id,".",data)  
+    //console.log("msg recieved in red-tetris server from ",socket.id,".",data)  
     if (data.command==='join'){
         //console.log("exist game?", data.roomName)
         const room_exists =  redtetris.checkGame(data.roomName)
@@ -68,22 +70,13 @@ io.on("connection", async (socket) => {
         // Check if Game exists?
         if (!room_exists){
           console.log("creating game.", data.roomName)
-          const game = new Game(data.roomName)
+          const game = new Game(data.roomName, 1)
           console.log("Player:", data.playerName, " init Room:", data.roomName)
           const player = new Player(10,20, data.playerName,socket.id)
           game.addPlayer(player, socket.id) // quito este array socketid
           redtetris.addGame(game)
-          // send back game
-          const msg = {
-              'command':'update',
-              'data':game
-          }
-          socket.emit("red_tetris_client", msg)
-          const sockets = game.getSockets()
-          sockets.forEach(socket_id => {
-            console.log("send to id:", socket_id)
-            socket.to(socket_id).emit("red_tetris_client", msg)
-          });
+          // send update msg to all player in the game
+          game.sendUpdate(io)
         } else {
           // search game by name
           console.log('Game ',data.roomName," exist.")
@@ -95,58 +88,43 @@ io.on("connection", async (socket) => {
             const player = new Player(10,20, data.playerName,socket.id)
             game.addPlayer(player, socket.id)
             game.info()
-
-            // send join msg to all player in the game
-            const msg = {
-              'command':'update',
-              'data':game
-            }
-            socket.emit("red_tetris_client", msg)
-            const sockets = game.getSockets()
-            sockets.forEach(socket_id => {
-              console.log("send to id:", socket_id)
-              socket.to(socket_id).emit("red_tetris_client", msg)
-            });
+            // send update msg to all player in the game
+            game.sendUpdate(io)
           } else {
             console.log("Player:", data.playerName, " already in Room:", data.roomName)
           }
-
         }
         
     }
-
-    if (data.key ==='ArrowLeft'){
-      play.piece.left()
-      play.print()
+    if (data.command==='start'){
+      console.log("recieve startCountdown", data.gameName)
+      // search game by name
+      const game = redtetris.getGame(data.gameName)
+      console.log("game",game)
+      game.startCountdown(io)      
     }
-    if (data.key ==='ArrowRight'){
-      play.piece.right()
-      play.print()
+    if (data.command==='move'){
+      //console.log("recieve move", data)
+      // search game by name
+      const game = redtetris.getGame(data.gameName)
+      //console.log(game)
+      const player = game.getPlayerBySocket(data.playerSocket)
+      //console.log(player)
+      player.movePiece(data.move)
+      // send update msg to all player in the game
+      game.sendUpdate(io)
     }
-    if (data.key ===' '){
-      play.piece.right()
-      play.print()
-    }
-    if (data.key ==='ArrowDown'){
-      play.print()
-    }
-    if (data.key ==='Escape'){
-      play.print()
-    }
-    console.log("sendfin")
-    /*
-    const item_game = {
-      "username":data.key,
-      "score":1,
-      "board": play.getBoard()
-    }
-    */
-    //socket.emit("red_tetris_client",item_game)
+    //console.log("send end")
   });
-  socket.on("disconnect", () => {
+  socket.on("di sconnect", () => {
     console.log("socket disconnect",socket.id)
-    // delete player with socket look in all games 
-    // send update game to players
+    const game = redtetris.getGameBySocket(socket.id)
+    if (game){
+      // delete player with socket look in all games 
+      game.delPlayerBySocket(socket.id)
+      // send update msg to all player in the game
+      game.sendUpdate(io)
+    }
   });
 });
 
@@ -195,8 +173,11 @@ io.on("connection", async (socket) => {
   })
 });
 */
-app.get("/:pp", (req, res, next) => {
-  console.log(req.params.pp, req.params.user)
+// this send back the game page /// 
+app.get("/:user/:pp", (req, res, next) => {
+  console.log("params",req.params.pp, req.params.user)
+    // do the checks of rooms and player in join(socket)
+
   //const filePath = path.join(__dirname, '/../public/')
   const filePath = path.join(__dirname, '/../public/')
   console.log(filePath)

@@ -51,6 +51,23 @@ class Games {
 		});
 		return my_game
 	}
+	// Search a game of a determinate socket.id
+	getGameBySocket(socket){
+		let search_game = false
+		for (let i = 0; i < this.games.length; i++) {
+			console.log("searching game")
+			// check if socket id is in this.sockets = []
+			if (this.games[i].sockets.includes(socket)) {
+				console.log("gME FOUNF")
+				search_game = this.games[i]
+				break
+			}
+		};
+		return search_game
+	}
+	// Search a player of a determinate socket.id
+	getPlayerBySocket(socket){
+	}
 	info(){
 		return this.games
 	}

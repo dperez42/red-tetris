@@ -22,10 +22,24 @@ socket.on("disconnect", () => {
   state.connected = false;
 });
 socket.on("red_tetris_client", async (data) => {
-  if (import.meta.env.VITE_DEBUG==='true'){console.log(data)}
-  console.log(data)
+  if (import.meta.env.VITE_DEBUG==='true'){console.log(data.data)}
+  if (data.command==='info'){
+    console.log("info:", data.data)
+  }
   if (data.command==='update'){
     console.log("update")
     store.commit("games_store/setGame", data.data)
+  }
+  if (data.command==='countdown'){
+    console.log("countdown", data)
+    store.commit("games_store/setCountdown", data)
+  }
+  if (data.command==='start'){
+    console.log("start", data)
+    store.commit("games_store/setStart", data)
+  }
+  if (data.command==='test'){
+    console.log("test:", data)
+    //store.commit("games_store/setGame", data.data)
   }
 });

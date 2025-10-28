@@ -1,65 +1,104 @@
 <template>
-  <div v-if="this.game == null">No game</div>
-  <div v-if="this.game != null">
-  <div v-for="(game, index) in this.game.players"
-    :key="index">
-    <Game  :room_name="this.game.name" :game="this.game.players[index]" />
-    Numero de player in {{ this.game.players.length }}
-  </div>
+<div class="container">
+  <div v-if="this.game != null" class="game-layout">
+    <!-- Sección izquierda: Galería -->
+    <div class="left-panel">
+      <h2>Galería de Tableros</h2>
+      <div class="gallery">
+        <div v-for="(game, index) in this.game.players" :key="index" >
+          <div v-if=" this.game.players[index].socket !== socket_id">
+            <p>Tablero {{ index}}</p>
+            <Spectrum  :room_name="this.game.name" :game="this.game.players[index]" />
+            <!-- Aquí podrías insertar un componente Tetris en miniatura -->
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Sección derecha: Tablero principal -->
+    <div class="right-panel">
+      <div class="board-wrapper">
+        <div v-for="(game, index) in this.game.players" :key="index">
+          
+          <div v-if=" this.game.players[index].socket == socket_id" class="tetris-board">
+          <Game  :room_name="this.game.name" :game="this.game.players[index]" />
+            <!-- Aquí iría el componente Tetris grande -->
+          </div>
+        </div>
+        <button v-if="this.game.players[0].socket == socket_id & !this.game.isCountdown " class="start-button" 
+        @click="clickStart()">Start</button>
+      </div>
+    </div>
+
+    <!-- pop up countdown -->
+    <div v-if="this.game != null & this.game.isCountdown" class="overlay_countdown">
+      <div class="popup_countdown">    
+        <h1>{{ this.game.name }}</h1>
+        <h3 class="popup_count"> Start in {{ this.game.countdown }} seconds...</h3>
+      </div>
+    </div>
+
   </div>
   <div v-if="this.game == null">
-  <div class="card">
-    <button type="button" @click="click">send text message </button>
- 
-    <p>
-      Edit
-      <code>components/HelloWorld.vue</code> to test HMR
-    </p>
-  </div>
-  <form @submit.prevent="handleSubmit" class="form">
-    <div class="form-group">
-      <label for="roomName">Room Name</label>
-      <input  
-        id="roomName"
-        v-model="roomName"
-        type="text"
-        placeholder="Enter room name"
-        required
-      />
+    <div class="card">
+      <button type="button" @click="click">send text message </button>
+  
+      <p>
+        Edit
+        <code>components/HelloWorld.vue</code> to test HMR
+      </p>
     </div>
-     <div class="form-group">
-      <label for="player">Player Name</label>
-      <input  class="input"
-        id="playerName"
-        v-model="playerName"
-        type="text"
-        placeholder="Your name"
-        required
-      />
-    </div>
-    <button class="button" type="submit"> join </button>
-  </form>
+    <form @submit.prevent="handleSubmit" class="form">
+      <div class="form-group">
+        <label for="roomName">Room Name</label>
+        <input  
+          id="roomName"
+          v-model="roomName"
+          type="text"
+          placeholder="Enter room name"
+          required
+        />
+      </div>
+      <div class="form-group">
+        <label for="player">Player Name</label>
+        <input  class="input"
+          id="playerName"
+          v-model="playerName"
+          type="text"
+          placeholder="Your name"
+          required
+        />
+      </div>
+      <button class="button" type="submit"> join </button>
+    </form>
+    {{socket_id}}
   </div>
+
+</div>
+
 </template>
 
 <script>
 import { ref } from 'vue'
 import { socket } from '../services/sockets'
 import Game from "./subcomponents/game.vue"
+import Spectrum from "./subcomponents/spectrum.vue"
 import store from '../store/index' 
 
 export default {
   name: 'Home',
   components: {
-    Game
+    Game,
+    Spectrum
   },
   props: {
     },
   data() {
-	return {
-    roomName:'test_room',
-    playerName:"test_player"
-  }
+    return {
+      roomName:'test_room',
+      playerName:"test_player",
+      visible: true,
+      count: 10
+    }
   },
   methods: {
     createBoard(){
@@ -89,23 +128,26 @@ export default {
       }
       socket.emit('red_tetris_server',msg)
     },
-    callback_keydown(e){
-      //console.log(e.key)
-      console.log(e.code)
-      let data =''
-      if (e.code=='ArrowUp') { data = {"msg":"press up"}}
-      if (e.code=='ArrowDown') { data = {"msg":"press down"}}
-      if (e.code=='Space') { data = {"msg":"press space"}}
-      if (e.code=='ArrowLeft') { data = {"msg":"press Left"}}  
-      if (e.code=='ArrowRight') { data = {"msg":"press right"}}  
-      socket.emit('red_tetris_server',data)
+    clickStart(){
+      console.log("click Start")
+      const msg = {
+        command: 'start',
+        gameName: this.game.name
+      }
+      console.log("send", msg)
+      socket.emit('red_tetris_server',msg)
     },
     keyHandler(event){
-      if (['Enter',  'ArrowDown',  'ArrowUp',  'ArrowRight',  'ArrowLeft',  ' '].indexOf(event.key) > -1) {
-        socket.emit('red_tetris_server', { key: event.key });
-      }
-      if (event.key == 'Escape') {
-        socket.emit('red_tetris_server', { key: event.key });
+      if (['Enter',  'ArrowDown',  'ArrowUp',  'ArrowRight',  'ArrowLeft', ' ','Escape'].indexOf(event.key) > -1) {
+        const msg = {
+          command: 'move',
+          gameName: this.game.name,
+          playerSocket: this.socket_id,
+          move: event.key
+        }
+        if (this.game.isStart){
+          socket.emit('red_tetris_server', msg);
+        }
       }
     }
   },
@@ -126,6 +168,9 @@ export default {
     },
     game(){
       return store.state.games_store.game
+    },
+    socket_id(){
+      return store.state.games_store.socket
     }
   },
   beforeMount() {
@@ -142,36 +187,140 @@ export default {
 </script>
 
 <style scoped>
-.read-the-docs {
-  color: #888;
-}
-.form {
+.container {
   display: flex;
-  flex-direction: column;
+  height: 100vh;
+  font-family: Arial, sans-serif;
+}
+
+.game-layout {
+  display: flex;
+  height: 100vh;
+}
+/* Sección izquierda */
+.left-panel {
+  width: 60%;
+  background-color: #f4f4f4;
+  padding: 1rem;
+  overflow-y: auto;
+  border-right: 1px solid #ccc;
+}
+
+.gallery {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.mini-board {
+  width: 100px;
+  height: 100px;
+  background-color: #ddd;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #aaa;
+  border-radius: 4px;
+}
+
+/* Sección derecha */
+.right-panel {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: rgb(173, 37, 37);
+}
+
+.board-wrapper {
+  text-align: center;
+}
+
+.tetris-board {
   width: 300px;
-  gap: 12px;
-  margin: 0 auto;
-  font-family: sans-serif;
+  height: 500px;
+  background-color: #000;
+  margin-bottom: 1rem;
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: 4px solid #333;
 }
-.form-group {
+
+.start-button {
+  padding: 0.5rem 1.5rem;
+  font-size: 1.2rem;
+  background-color: #28a745;
+  border: none;
+  color: white;
+  cursor: pointer;
+  border-radius: 6px;
+}
+
+.start-button:hover {
+  background-color: #218838;
+}
+.overlay_countdown {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.8); /* optional dim background */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999; /* ensures it appears on top */
+}
+.popup_countdown {
+  width: 300px;
+  height: 200px;
+  background: radial-gradient(circle at top left, #ffffff, #b30000);
   display: flex;
   flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 15px;
+  text-align: center;
+  color: white;
+  box-shadow: 0 0 125px rgba(255, 0, 0, 0.6);
+  padding: 20px;
+  z-index: 9999;
+  animation: pulseGlow 2s infinite alternate ease-in-out;
 }
-.input {
-  padding: 8px;
-  font-size: 14px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
+/* Título con sombra */
+.popup_countdown h1 {
+  font-size: 2rem;
+  margin-bottom: 10px;
+  text-shadow: 2px 2px 6px rgba(0,0,0,0.3);
 }
-.button {
-  padding: 10px;
-  background-color: aquamarine;
-  color:white;
-  border: none;
-  cursor: pointer;
-  border-radius: 4px;
+@keyframes pulseGlow {
+  0% {
+    box-shadow: 0 0 125px rgba(255, 0, 0, 0.4);
+  }
+  100% {
+    box-shadow: 0 0 125px rgba(255, 0, 0, 0.9);
+  }
 }
-.button:hover{
-  background-color: blue;
+
+/* Countdown con efecto de rebote */
+.popup_count {
+  font-size: 1.2rem;
+  animation: bounce 1s infinite;
+  font-weight: bold;
 }
+
+/* Efecto de rebote */
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+    transform: scale(1);
+  }
+  50% {
+    transform: translateY(-10px);
+    transform: scale(1.5);
+  }
+}
+
 </style>

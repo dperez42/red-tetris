@@ -10,7 +10,7 @@ export default defineConfig(({ mode }) => {
   return {
     server: {   
       //https:true,
-      port: env.CLIENT_PORT ? Number(env.CLIENT_PORT) : 5173, 
+      port: env.VITE_CLIENT_PORT ? Number(env.VITE_CLIENT_PORT) : 5173, 
       host: '0.0.0.0', // par default: localhost
       strictPort: true,
     },

@@ -9,10 +9,17 @@ export default {
     mutations: {
         setGame(state, game){
             state.game = game
-            //console.log("Store", state.game)
         },
         setSocket(state, socket){
             state.socket = socket
+        },
+        setCountdown(state, data){
+            state.game.intervalCountdown = data.intervalCountdown
+            state.game.isCountdown = data.isCountdown
+            state.game.countdown = data.countdown
+        },
+        setStart(state, data){
+            state.game.isStart = data.isStart
         },
         setExample(state, example_board){
             console.log("store")

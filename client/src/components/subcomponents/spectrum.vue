@@ -2,29 +2,34 @@
   <div class="tetris">
   <!-- Room Name -->
   <div class="status">
-      <span class="roomname">{{room_name}} nb:{{this.game.nb_piece}} sc:{{this.game.score}}</span>
+      <span class="roomname">{{room_name}}</span>
   </div>
   <!-- Board -->
   <div class="board">
 		<div v-for="(row, y) in this.transpose_matrix(this.game.field_piece)"  :key="y">
       <div v-for="(cell, x) in row"  :key="x" >
         <div class="cell" :style="{backgroundColor: getcolour(cell) || '#222'}">
-          {{cell}}
         </div>
       </div>
-		</div>
+    </div>
   </div>
   <!--- Score and username-->
     <div class="status">
       <span class="username">{{this.game.name}}</span>
       <span class="score"> Score: {{this.game.score}}</span>
+      {{socket_id}}
     </div>
   </div>
+  
 </template>
 
+
+
 <script>
+import store from '../../store/index'
+
 export default {
-  name: 'Game',
+  name: 'Spectrum',
   components: {
   },
   props: {
@@ -46,13 +51,19 @@ export default {
   },
   methods: {
     getcolour(nb_col){
-      const colors = ['#ffffff','#1982c4','#6a4c93', '#ffca3a', '#8ac926','#ff924c']
+      const colors = ['#0000ff','#1982c4','#6a4c93', '#ffca3a', '#8ac926','#ff924c']
       return(colors[nb_col])
+      return('#1982c4')
     },
     transpose_matrix(matrix){
       return matrix[0].map((_, x) => matrix.map(row => row[x]))
     }
 
+  },
+  computed:{
+    socket_id(){
+      return store.state.games_store.socket
+    }
   },
   mounted() {
   },
@@ -67,24 +78,26 @@ export default {
   flex-direction: column;
   align-items: center;
   gap: 10px;
-  background-color: #111;
+  background-color: rgb(47, 42, 131);
 }
 .board {
   margin-top: 10px;
   display: grid;
-  grid-template-rows: repeat(20, 20px);
-  grid-template-columns: repeat(10, 20px);
+  grid-template-rows: repeat(20, 10px);
+  grid-template-columns: repeat(10, 10px);
   gap: 1px;
   background:#111;
 }
 
 .cell {
-  width: 20px;
-  height: 20px;
+  width: 10px;
+  height: 10px;
+  border: 1px solid #a22f2f;
   text-align: center;
-  border: 1px solid rgb(106, 106, 106);
-  border-radius: 3px;
-  box-shadow: 0 2px 5px rgba(255, 255, 255, 0.5);
+  border: 1px solid #111
+}
+.cell.filled{
+  background: #19758b;
 }
 .status{
   margin-top: 15px;
